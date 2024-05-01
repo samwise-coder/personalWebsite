@@ -1,17 +1,16 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App ubuntu~: "/>
+  <img alt="Vue logo" src="./assets/logo.png" />
+  <GA_FJSP />
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import GA_FJSP from "./components/GA_FJSP.vue";
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    HelloWorld
-  }
-}
+    GA_FJSP,
+  },
+};
 </script>
 
 <style>
