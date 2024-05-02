@@ -115,17 +115,28 @@ const GS = [];
 function globalSelection() {
   // GS step2
   let _jobs = _.cloneDeep(jobs);
-  const _random = getRandomInt(machineTimeList.length);
+  const _random = 2; //getRandomInt(_jobs.length);
   const selectRow = _jobs.splice(_random, 1);
   // GS step3
+
   selectRow[0].forEach((ele) => {
+    let _tempTime = _.cloneDeep(machineTimeList);
+    let _tempProIndexs = [];
     machines.forEach((eleSon, sondex) => {
       if (ele[eleSon] !== "-") {
+        _tempTime[sondex] += ele[eleSon];
+        _tempProIndexs.push(sondex);
       }
-      machineTimeList[sondex] += ele[eleSon];
       // GS step4
     });
-    console.log("---s", machineTimeList);
+
+    console.log("---temptime", _tempTime);
+    console.log("---machineTimeL5ist", machineTimeList);
+    machineTimeList = _.cloneDeep(_tempTime);
+
+    console.log("---index", _tempProIndexs);
+
+    //
   });
   console.log("-----b", _random, selectRow[0], _jobs);
 }

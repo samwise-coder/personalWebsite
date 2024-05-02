@@ -1,14 +1,17 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png" />
   <GA_FJSP />
+  <Diff />
 </template>
 
 <script>
 import GA_FJSP from "./components/GA_FJSP.vue";
+import Diff from "./components/diff.vue";
 export default {
   name: "App",
   components: {
     GA_FJSP,
+    Diff,
   },
 };
 </script>
