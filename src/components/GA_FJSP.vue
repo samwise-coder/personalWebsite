@@ -108,10 +108,9 @@ function populationInit() {}
 // 全局选择
 // GS step1
 let machineTimeList = Array(machineNum).fill(0);
-console.log("jobs", jobs);
-console.log("machineTimeList", machineTimeList);
+let GS = [];
+
 globalSelection();
-const GS = [];
 function globalSelection() {
   // GS step2
   let _jobs = _.cloneDeep(jobs);
@@ -129,16 +128,17 @@ function globalSelection() {
       }
       // GS step4
     });
-
-    console.log("---temptime", _tempTime);
-    console.log("---machineTimeL5ist", machineTimeList);
     machineTimeList = _.cloneDeep(_tempTime);
-
-    console.log("---index", _tempProIndexs);
-
-    //
+    // 找出工序中最小载荷机器
+    let _minimunValIndex = _tempProIndexs[0];
+    _tempProIndexs.forEach((ele, pdex) => {
+      if (_tempTime[ele] < _tempTime[_minimunValIndex]) {
+        _minimunValIndex = ele;
+      }
+    });
+    GS.push(_tempProIndexs.indexOf(_minimunValIndex) + 1);
   });
-  console.log("-----b", _random, selectRow[0], _jobs);
+  console.log("GS", GS);
 }
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
