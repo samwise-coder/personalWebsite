@@ -111,14 +111,27 @@ let machineTimeList = Array(machineNum).fill(0);
 let GS = [];
 
 globalSelection();
+
 function globalSelection() {
   // GS step2
   let _jobs = _.cloneDeep(jobs);
-  const _random = 2; //getRandomInt(_jobs.length);
-  const selectRow = _jobs.splice(_random, 1);
-  // GS step3
+  console.log("_jobs", _jobs);
 
-  selectRow[0].forEach((ele) => {
+  // GS step3
+  let g = _jobs.length;
+  while (g > 0) {
+    const _random = getRandomInt(g);
+    const selectRow = _jobs.splice(_random, 1);
+    const gsiItem = selectSingleProcess(selectRow[0]);
+    GS = [...GS, ...gsiItem];
+    g--;
+  }
+  console.log("GS", GS);
+}
+
+function selectSingleProcess(row) {
+  let _tempArr = [];
+  row.forEach((ele) => {
     let _tempTime = _.cloneDeep(machineTimeList);
     let _tempProIndexs = [];
     machines.forEach((eleSon, sondex) => {
@@ -136,10 +149,11 @@ function globalSelection() {
         _minimunValIndex = ele;
       }
     });
-    GS.push(_tempProIndexs.indexOf(_minimunValIndex) + 1);
+    _tempArr.push(_tempProIndexs.indexOf(_minimunValIndex) + 1);
   });
-  console.log("GS", GS);
+  return _tempArr;
 }
+
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
