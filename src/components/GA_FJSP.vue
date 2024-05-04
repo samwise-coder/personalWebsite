@@ -104,15 +104,33 @@ function objectSpanMethod({ row, columnIndex }) {
 }
 /* eslint-disable */
 // 种群初始化
+let GS = [];
+let OS = [];
 function populationInit() {}
-// 全局选择
+// 交叉操作
+function cross(params) {}
+// 工序随机选择
+OS = processRandomSelection();
+console.log("OS", OS);
+function processRandomSelection() {
+  let _osArr = [];
+  jobs.forEach((ele, index) => {
+    console.log();
+    let _processGroup = Array(ele.length).fill(index + 1);
+    _osArr = [..._osArr, ..._processGroup];
+  });
+  return shuffleArray(_osArr);
+}
+// 将一个数组打乱
+function shuffleArray(array) {
+  array.sort(() => Math.random() - 0.5);
+  return array;
+}
+// 机器全局选择
 // GS step1
 let machineTimeList = Array(machineNum).fill(0);
-let GS = [];
-
-globalSelection();
-
-function globalSelection() {
+machineGlobalSelection();
+function machineGlobalSelection() {
   // GS step2
   let _jobs = _.cloneDeep(jobs);
   console.log("_jobs", _jobs);
