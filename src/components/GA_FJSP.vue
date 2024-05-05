@@ -103,10 +103,15 @@ function objectSpanMethod({ row, columnIndex }) {
   }
 }
 /* eslint-disable */
-// 种群初始化
+const population = 100; //种群数量
+let MachinePartChromosomes = []; // 机器部分染色体集
+let ProcessPartChromosomes = []; // 工序部分染色体集
 let GS = [];
 let OS = [];
-function populationInit() {}
+// 种群初始化
+function populationInit() {
+  for (let i = 0; i < population; i++) {}
+}
 // 交叉操作
 function cross(params) {}
 // 工序随机选择
