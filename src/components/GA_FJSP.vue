@@ -108,14 +108,15 @@ let MachinePartChromosomes = []; // 机器部分染色体集
 let ProcessPartChromosomes = []; // 工序部分染色体集
 let GS = [];
 let OS = [];
+let machineTimeList = Array(machineNum).fill(0);
+
 // 种群初始化
 populationInit();
 function populationInit() {
-  let _gsItem = machineGlobalSelection();
-  console.log("GS", _gsItem);
-
   for (let i = 0; i < population; i++) {
     // MachinePartChromosomes.push()
+    let _gsItem = machineGlobalSelection();
+    console.log("GS", _gsItem);
   }
 }
 // 交叉操作
@@ -138,7 +139,6 @@ function shuffleArray(array) {
 }
 // 机器全局选择
 // GS step1
-let machineTimeList = Array(machineNum).fill(0);
 // GS = machineGlobalSelection();
 function machineGlobalSelection() {
   // GS step2
@@ -149,10 +149,7 @@ function machineGlobalSelection() {
   while (g > 0) {
     const _random = getRandomInt(g);
     const selectRow = _jobs.splice(_random, 1);
-    console.log("ssss", selectRow);
     const gsiItem = selectSingleProcess(selectRow[0]);
-    console.log("9999999", gsiItem);
-
     _tempArr = [..._tempArr, ...gsiItem];
     g--;
   }
@@ -169,11 +166,12 @@ function selectSingleProcess(row) {
         _tempTime[sondex] += ele[eleSon];
         _tempProIndexs.push(sondex);
       }
-      // GS step4
     });
+
     machineTimeList = _.cloneDeep(_tempTime);
     // 找出工序中最小载荷机器
     let _minimunValIndex = _tempProIndexs[0];
+
     _tempProIndexs.forEach((ele, pdex) => {
       if (_tempTime[ele] < _tempTime[_minimunValIndex]) {
         _minimunValIndex = ele;
