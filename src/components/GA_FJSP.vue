@@ -109,14 +109,19 @@ let ProcessPartChromosomes = []; // 工序部分染色体集
 let GS = [];
 let OS = [];
 // 种群初始化
+populationInit();
 function populationInit() {
-  for (let i = 0; i < population; i++) {}
+  let _gsItem = machineGlobalSelection();
+  console.log("GS", _gsItem);
+
+  for (let i = 0; i < population; i++) {
+    // MachinePartChromosomes.push()
+  }
 }
 // 交叉操作
 function cross(params) {}
 // 工序随机选择
 OS = processRandomSelection();
-console.log("OS", OS);
 function processRandomSelection() {
   let _osArr = [];
   jobs.forEach((ele, index) => {
@@ -134,22 +139,24 @@ function shuffleArray(array) {
 // 机器全局选择
 // GS step1
 let machineTimeList = Array(machineNum).fill(0);
-machineGlobalSelection();
+// GS = machineGlobalSelection();
 function machineGlobalSelection() {
   // GS step2
+  let _tempArr = [];
   let _jobs = _.cloneDeep(jobs);
-  console.log("_jobs", _jobs);
-
   // GS step3
   let g = _jobs.length;
   while (g > 0) {
     const _random = getRandomInt(g);
     const selectRow = _jobs.splice(_random, 1);
+    console.log("ssss", selectRow);
     const gsiItem = selectSingleProcess(selectRow[0]);
-    GS = [...GS, ...gsiItem];
+    console.log("9999999", gsiItem);
+
+    _tempArr = [..._tempArr, ...gsiItem];
     g--;
   }
-  console.log("GS", GS);
+  return _tempArr;
 }
 
 function selectSingleProcess(row) {
