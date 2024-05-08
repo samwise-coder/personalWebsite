@@ -116,13 +116,14 @@ function populationInit() {
   for (let i = 0; i < population; i++) {
     // MachinePartChromosomes.push()
     let _gsItem = machineGlobalSelection();
-    console.log("GS", _gsItem);
+    MachinePartChromosomes.push(_gsItem);
+    let _osItem = processRandomSelection();
+    ProcessPartChromosomes.push(_osItem);
   }
 }
 // 交叉操作
 function cross(params) {}
 // 工序随机选择
-OS = processRandomSelection();
 function processRandomSelection() {
   let _osArr = [];
   jobs.forEach((ele, index) => {
