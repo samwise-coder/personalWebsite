@@ -23,21 +23,92 @@ import { Mk01 } from "../assets/Mk01";
 import _ from "lodash";
 const tableConfig = ref([]);
 const machineNum = Mk01[0][1];
-const machines = []; // 所有机器
+const machines = getMachines(machineNum); // 所有机器
+tableConfig.value = getTableConfig(machineNum);
 const tableData = ref([]);
-const jobs = []; // 工件数组
+tableData.value = originalDataVisualization(Mk01);
+const jobs = getJobs(Mk01); // 工件数组
+console.log("jobs", jobs);
 
-let i = 1;
-while (i <= machineNum) {
-  machines.push("machine" + i);
-  tableConfig.value.push({ prop: "machine" + i, name: "机器" + i });
-  i++;
+const To = getProcessNum(jobs); // 工序数
+console.log("To", To);
+
+function getMachines(num) {
+  let i = 1;
+  let _machines = [];
+  while (i <= num) {
+    _machines.push("machine" + i);
+    i++;
+  }
+  return _machines;
 }
-tableConfig.value.unshift({ prop: "processName", name: "工序" });
-tableConfig.value.unshift({ prop: "job", name: "工件" });
-
-originalDataVisualization(Mk01);
-// 将原始数据可视化
+function getTableConfig(num) {
+  let i = 1;
+  let _tableConfig = [];
+  while (i <= num) {
+    _tableConfig.push({ prop: "machine" + i, name: "机器" + i });
+    i++;
+  }
+  _tableConfig.unshift({ prop: "processName", name: "工序" });
+  _tableConfig.unshift({ prop: "job", name: "工件" });
+  return _tableConfig;
+}
+function getJobs(list) {
+  let _jobs = [];
+  let j = 1;
+  while (j < list.length) {
+    const processNum = list[j][0];
+    const processArr = list[j].slice(1);
+    const jobItems = [];
+    const _jobObj = [];
+    let k = 0;
+    while (k < processNum) {
+      if (k === 0) {
+        jobItems.push(processArr.slice(1, processArr[0] * 2 + 1));
+      } else {
+        let _length = 0;
+        jobItems.forEach((ele) => {
+          _length += ele.length;
+        });
+        jobItems.push(
+          processArr.slice(
+            _length + jobItems.length + 1,
+            _length +
+              jobItems.length +
+              processArr[_length + jobItems.length] * 2 +
+              1
+          )
+        );
+      }
+      k++;
+    }
+    jobItems.forEach((ele, index) => {
+      const row = { processName: "J" + j + (index + 1) };
+      ele.forEach((eleSon, sondex) => {
+        if (sondex % 2 === 0) {
+          row[machines[eleSon - 1]] = ele[sondex + 1];
+        }
+      });
+      machines.forEach((eleMac) => {
+        if (!(eleMac in row)) {
+          row[eleMac] = "-";
+        }
+      });
+      // 合并单元格
+      if (index === 0) {
+        row.rowSpan = jobItems.length;
+      } else {
+        row.rowSpan = 0;
+      }
+      row.job = "job" + j;
+      _jobObj.push(row);
+    });
+    _jobs.push(_jobObj);
+    j++;
+  }
+  return _jobs;
+}
+// 将原始数据可视化处理
 function originalDataVisualization(list) {
   const _tableData = [];
   let j = 1;
@@ -89,10 +160,9 @@ function originalDataVisualization(list) {
       _tableData.push(row);
       _jobObj.push(row);
     });
-    jobs.push(_jobObj);
     j++;
   }
-  tableData.value = _tableData;
+  return _tableData;
 }
 function objectSpanMethod({ row, columnIndex }) {
   if (columnIndex === 0) {
@@ -127,7 +197,6 @@ function cross(params) {}
 function processRandomSelection() {
   let _osArr = [];
   jobs.forEach((ele, index) => {
-    console.log();
     let _processGroup = Array(ele.length).fill(index + 1);
     _osArr = [..._osArr, ..._processGroup];
   });
@@ -185,6 +254,11 @@ function selectSingleProcess(row) {
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
+}
+function getProcessNum(list) {
+  return list.reduce((pre, cur) => {
+    return pre + cur.length;
+  }, 0);
 }
 </script>
 
