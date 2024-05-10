@@ -31,7 +31,8 @@ const jobs = getJobs(Mk01); // 工件数组
 console.log("jobs", jobs);
 
 const To = getProcessNum(jobs); // 工序数
-console.log("To", To);
+
+cross(To);
 
 function getMachines(num) {
   let i = 1;
@@ -192,7 +193,11 @@ function populationInit() {
   }
 }
 // 交叉操作
-function cross(params) {}
+function cross(to) {
+  let r = getRandomNumber(1, to - 1);
+  console.log("r", r);
+  // 生成r个互不相等的随机数
+}
 // 工序随机选择
 function processRandomSelection() {
   let _osArr = [];
@@ -259,6 +264,10 @@ function getProcessNum(list) {
   return list.reduce((pre, cur) => {
     return pre + cur.length;
   }, 0);
+}
+// 生成一个区间[a,b]之间的随机数，a,b 可以取到
+function getRandomNumber(a, b) {
+  return Math.floor(Math.random() * (b - a + 1) + a);
 }
 </script>
 
