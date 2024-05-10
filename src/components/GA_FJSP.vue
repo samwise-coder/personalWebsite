@@ -197,6 +197,16 @@ function cross(to) {
   let r = getRandomNumber(1, to - 1);
   console.log("r", r);
   // 生成r个互不相等的随机数
+  let i = 0;
+  let rArr = [];
+  do {
+    let _r = getRandomNumber(1, to - 1);
+    if (!rArr.includes(_r)) {
+      rArr.push(_r);
+      i++;
+    }
+  } while (i < r);
+  console.log("rArrr", rArr);
 }
 // 工序随机选择
 function processRandomSelection() {
