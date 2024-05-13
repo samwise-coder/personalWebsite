@@ -208,6 +208,8 @@ function cross(to) {
   } while (i < r);
   console.log("rArrr", rArr);
 }
+// 选择操作
+function selection(params) {}
 // 工序随机选择
 function processRandomSelection() {
   let _osArr = [];
