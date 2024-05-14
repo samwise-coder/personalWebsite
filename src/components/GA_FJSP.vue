@@ -208,6 +208,11 @@ function cross(to) {
   } while (i < r);
   console.log("rArrr", rArr);
 }
+// 适应度函数 目标：最大完工时间最小化，f=min(max(Cj))
+// 计算每个个体的最大完工时间
+function fitness(individual) {
+  // 解码
+}
 // 选择操作
 function selection(params) {}
 // 工序随机选择
