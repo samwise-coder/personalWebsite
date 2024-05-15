@@ -29,7 +29,6 @@ const tableData = ref([]);
 tableData.value = originalDataVisualization(Mk01);
 const jobs = getJobs(Mk01); // 工件数组
 console.log("jobs", jobs);
-
 const To = getProcessNum(jobs); // 工序数
 
 cross(To);
@@ -210,8 +209,12 @@ function cross(to) {
 }
 // 适应度函数 目标：最大完工时间最小化，f=min(max(Cj))
 // 计算每个个体的最大完工时间
-function fitness(individual) {
+fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0]);
+function fitness(mpc, ppc) {
   // 解码
+  let Jm = []; //机器顺序矩阵
+  let T = []; //时间顺序矩阵
+  console.log("fit-ness", mpc, ppc);
 }
 // 选择操作
 function selection(params) {}
