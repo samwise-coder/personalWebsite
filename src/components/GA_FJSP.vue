@@ -83,15 +83,17 @@ function getJobs(list) {
       k++;
     }
     jobItems.forEach((ele, index) => {
-      const row = { processName: "J" + j + (index + 1) };
+      const row = { processName: "J" + j + (index + 1), machineTimeMatrix: [] }; // machineTimeMatrix:[机器,时间]矩阵
       ele.forEach((eleSon, sondex) => {
         if (sondex % 2 === 0) {
           row[machines[eleSon - 1]] = ele[sondex + 1];
         }
       });
-      machines.forEach((eleMac) => {
+      machines.forEach((eleMac, macDex) => {
         if (!(eleMac in row)) {
           row[eleMac] = "-";
+        } else {
+          row["machineTimeMatrix"].push([macDex + 1, row[eleMac]]);
         }
       });
       // 合并单元格
@@ -209,13 +211,83 @@ function cross(to) {
 }
 // 适应度函数 目标：最大完工时间最小化，f=min(max(Cj))
 // 计算每个个体的最大完工时间
-fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0]);
-function fitness(mpc, ppc) {
-  // 解码
+fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
+function fitness(mpc, ppc, allJobs) {
+  // 机器选择部分解码
   let Jm = []; //机器顺序矩阵
   let T = []; //时间顺序矩阵
   console.log("fit-ness", mpc, ppc);
+  let i = 0;
+  allJobs.forEach((ele) => {
+    let _machRow = [];
+    let _timeRow = [];
+    ele.forEach((eleSon) => {
+      console.log("------> i", i);
+      _machRow.push(eleSon["machineTimeMatrix"][mpc[i] - 1][0]);
+      _timeRow.push(eleSon["machineTimeMatrix"][mpc[i] - 1][1]);
+      i++;
+    });
+    Jm.push(_machRow);
+    T.push(_timeRow);
+  });
+  console.log("fit-ness-matrix", Jm, T);
+
+  // 工序排序部分解码
+  // 转换成 O(jh) 第j个工件的第h道工序
+  // 首先求解出工序索引(h)矩阵：相当于每个工件的工序的索引，和工序排序染色体中的基因一一对应
+  let _hasCal = [];
+  let hMatrix = [];
+  ppc.forEach((ele) => {
+    _hasCal.push(ele);
+    hMatrix.push(_hasCal.filter((gene) => gene === ele).length);
+  });
+  console.log("hMatrix", hMatrix);
+  //
+  let Ojh = {}; // 工序层面
+  let Mi = {}; // 机器层面
+  machines.forEach((ele) => {
+    Mi[ele] = [];
+  });
+  ppc.forEach((ele, index) => {
+    let _SEObj = getOpStartEnd(
+      Mi,
+      `machine${Jm[ele - 1][hMatrix[index] - 1]}`,
+      ele,
+      hMatrix[index],
+      Ojh,
+      T[ele - 1][hMatrix[index] - 1]
+    );
+    Ojh[`O${ele}${hMatrix[index]}`] = {
+      machine: Jm[ele - 1][hMatrix[index] - 1],
+      duration: T[ele - 1][hMatrix[index] - 1],
+      St: _SEObj._St,
+      Et: _SEObj._Et,
+    };
+  });
+  console.log("-------mmm", Ojh, Mi);
 }
+function getOpStartEnd(mi, machineKey, j, h, ojh, duration) {
+  let _res = { _St: 0, _Et: 0 };
+  // let _hasOp=
+  if (mi[machineKey].length === 0) {
+    // 在机器mi是第一道加工工序
+    if (h === 1) {
+      // 是工件的第一道工序
+      _res._St = 0;
+      _res._Et = duration;
+    } else {
+      // 开始时间 则是上一道工序的结束时间
+      console.log("000sss-->", `O${j}${h}`, ojh);
+      _res._St = ojh[`O${j}${h}`].Et;
+      _res._Et = _res._St + duration;
+    }
+  } else {
+    // 否则找到机器mi上所有间隔空闲时间段[TSi,TEi]
+    let idlePeriod = [];
+  }
+  return _res;
+}
+function getOjh(target, list) {}
 // 选择操作
 function selection(params) {}
 // 工序随机选择
