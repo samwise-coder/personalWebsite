@@ -1,3 +1,4 @@
+
 <template>
   <div>
     <el-table
@@ -36,12 +37,9 @@ const jobs = getJobs(Mk01); // 工件数组
 const To = getProcessNum(jobs); // 工序数
 
 console.log("To", To, "\njobs", jobs);
+let myChart=null
+let ganttData=[]
 
-onMounted(() => {
-  var chartDom = document.getElementById("gantt");
-  var myChart = echarts.init(chartDom);
-  option && myChart.setOption(option);
-});
 
 let MachinePartChromosomes = getMachinePartChromosomes(
   jobs,
@@ -54,11 +52,14 @@ let ProcessPartChromosomes = getProcessPartChromosomes(
   machines
 ); // 工序部分染色体集
 
-fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
 
 // cross(To);
+onMounted(() => {
+  let chartDom = document.getElementById("gantt");
+  myChart = echarts.init(chartDom);
+  fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
+});
 
-var option;
 
 var data = [];
 var dataCount = 10;
@@ -87,13 +88,15 @@ categories.forEach(function (category, index) {
         },
       },
     });
+
+
     baseTime += Math.round(Math.random() * 2000);
   }
 });
 function renderItem(params, api) {
-  var categoryIndex = api.value(0);
-  var start = api.coord([api.value(1), categoryIndex]);
-  var end = api.coord([api.value(2), categoryIndex]);
+  var machineIndex = api.value(0);
+  var start = api.coord([api.value(1), machineIndex]);
+  var end = api.coord([api.value(2), machineIndex]);
   var height = api.size([0, 1])[1] * 0.6;
   var rectShape = echarts.graphic.clipRectByRect(
     {
@@ -114,63 +117,12 @@ function renderItem(params, api) {
       type: "rect",
       transition: ["shape"],
       shape: rectShape,
-      style: api.style(),
+      style: {
+        fill: api.visual('color')
+      },
     }
   );
 }
-option = {
-  tooltip: {
-    formatter: function (params) {
-      return params.marker + params.name + ": " + params.value[3] + " ms";
-    },
-  },
-  title: {
-    text: "Profile",
-    left: "center",
-  },
-  dataZoom: [
-    {
-      type: "slider",
-      filterMode: "weakFilter",
-      showDataShadow: false,
-      top: 400,
-      labelFormatter: "",
-    },
-    {
-      type: "inside",
-      filterMode: "weakFilter",
-    },
-  ],
-  grid: {
-    height: 300,
-  },
-  xAxis: {
-    min: startTime,
-    scale: true,
-    axisLabel: {
-      formatter: function (val) {
-        return Math.max(0, val - startTime) + " ms";
-      },
-    },
-  },
-  yAxis: {
-    data: categories,
-  },
-  series: [
-    {
-      type: "custom",
-      renderItem: renderItem,
-      itemStyle: {
-        opacity: 0.8,
-      },
-      encode: {
-        x: [1, 2],
-        y: 0,
-      },
-      data: data,
-    },
-  ],
-};
 // 适应度函数 目标：最大完工时间最小化，f=min(max(Cj))
 // 计算每个个体的最大完工时间
 function fitness(mpc, ppc, xJobs) {
@@ -293,15 +245,91 @@ function fitness(mpc, ppc, xJobs) {
     }
 
     Ojh[`O${j}${h}`] = {
+      job:j,
+      process:h,
+      color:`hsl(${j*43} 75% 60%)`,
       machine: machineKey,
+      machineIndex: Jm[ele - 1][hMatrix[index]-1]-1,
       duration: duration,
       St: _res._St,
       Et: _res._Et,
     };
   });
   console.log("Ojh", Ojh, "\nMijh", Mijh);
+
+  ganttData=getGanttData(Ojh)
+  let ganttOption=getGanttOption(ganttData)
+  myChart.setOption(ganttOption);
+}
+function getGanttData(obj) {
+  let _data=[]
+  for (const key in obj) {
+    _data.push({
+      name: key,
+      value: [obj[key]['machineIndex'],obj[key]['St'] , obj[key]['Et'], obj[key]['duration']],
+      itemStyle: {
+        color: obj[key]['color']
+      },
+    });
+  }
+  return _data
 }
 
+function getGanttOption(data) {
+  return {
+    tooltip: {
+      formatter: function (params) {
+        return params.marker + params.name + ": " + params.value[3] + " min";
+      },
+    },
+    title: {
+      text: "GA-FJSP",
+      left: "center",
+    },
+    dataZoom: [
+      {
+        type: "slider",
+        filterMode: "weakFilter",
+        showDataShadow: false,
+        top: 400,
+        labelFormatter: "",
+      },
+      {
+        type: "inside",
+        filterMode: "weakFilter",
+      },
+    ],
+    grid: {
+      height: 300,
+    },
+    xAxis: {
+      min: 0,
+      scale: true,
+      axisLabel: {
+        formatter: function (val) {
+          return Math.max(0, val) + " min";
+        },
+      },
+    },
+    yAxis: {
+      data: machines,
+    },
+    series: [
+      {
+        type: "custom",
+        renderItem: renderItem,
+        itemStyle: {
+          opacity: 0.8,
+        },
+        encode: {
+          x: [1, 2],
+          y: 0,
+        },
+        data: data,
+      },
+    ],
+  }; 
+}
 function getMachinePartChromosomes(xJobs, xPopulation, xMachines) {
   let _res = [];
   for (let i = 0; i < xPopulation; i++) {
