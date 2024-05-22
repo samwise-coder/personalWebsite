@@ -36,7 +36,7 @@ tableConfig.value = getTableConfig(machineNum);
 tableData.value = originalDataVisualization(Mk01);
 const jobs = getJobs(Mk01); // 工件数组
 const To = getProcessNum(jobs); // 工序数
-
+const Jobset = getJobset(To);
 console.log("To", To, "\njobs", jobs);
 let myChart = null;
 let ganttData = [];
@@ -564,7 +564,7 @@ function getProcessNum(list) {
     return pre + cur.length;
   }, 0);
 }
-// 交叉操作
+// 机器部分交叉操作
 machineCross(To, MachinePartChromosomes[0], MachinePartChromosomes[1]);
 function machineCross(to, mp1, mp2) {
   let r = getRandomNumber(1, to - 1);
@@ -593,6 +593,16 @@ function machineCross(to, mp1, mp2) {
     }
   }
   console.log("mc1", mc1, "\n mc2", mc2);
+}
+// 工序部分交叉操作
+processCross(Jobset, ProcessPartChromosomes[0], ProcessPartChromosomes[1]);
+function processCross(jobset, pp1, pp2) {}
+function getJobset(to) {
+  let _set = [];
+  for (let i = 0; i < to; i++) {
+    _set.push(i + 1);
+  }
+  return _set;
 }
 // 生成一个区间[a,b]之间的随机数，a,b 可以取到
 function getRandomNumber(a, b) {
