@@ -20,6 +20,8 @@
 </template>
 
 <script setup>
+/* eslint-disable */
+
 import * as echarts from "echarts";
 import { ref, onMounted } from "vue";
 import { Mk01 } from "../assets/Mk01";
@@ -27,19 +29,17 @@ import _ from "lodash";
 const tableConfig = ref([]);
 const machineNum = Mk01[0][1];
 const tableData = ref([]);
-const population = 1; //种群数量
+const population = 2; //种群数量
 
 const machines = getMachines(machineNum); // 所有机器
 tableConfig.value = getTableConfig(machineNum);
 tableData.value = originalDataVisualization(Mk01);
-console.log("tableData.value", tableData.value);
 const jobs = getJobs(Mk01); // 工件数组
 const To = getProcessNum(jobs); // 工序数
 
 console.log("To", To, "\njobs", jobs);
-let myChart=null
-let ganttData=[]
-
+let myChart = null;
+let ganttData = [];
 
 let MachinePartChromosomes = getMachinePartChromosomes(
   jobs,
@@ -52,14 +52,11 @@ let ProcessPartChromosomes = getProcessPartChromosomes(
   machines
 ); // 工序部分染色体集
 
-
-// cross(To);
 onMounted(() => {
   let chartDom = document.getElementById("gantt");
   myChart = echarts.init(chartDom);
-  fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
+  // fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
 });
-
 
 var data = [];
 var dataCount = 10;
@@ -89,7 +86,6 @@ categories.forEach(function (category, index) {
       },
     });
 
-
     baseTime += Math.round(Math.random() * 2000);
   }
 });
@@ -118,7 +114,7 @@ function renderItem(params, api) {
       transition: ["shape"],
       shape: rectShape,
       style: {
-        fill: api.visual('color')
+        fill: api.visual("color"),
       },
     }
   );
@@ -245,34 +241,38 @@ function fitness(mpc, ppc, xJobs) {
     }
 
     Ojh[`O${j}${h}`] = {
-      job:j,
-      process:h,
-      color:`hsl(${j*43} 75% 60%)`,
+      job: j,
+      process: h,
+      color: `hsl(${j * 43} 75% 60%)`,
       machine: machineKey,
-      machineIndex: Jm[ele - 1][hMatrix[index]-1]-1,
+      machineIndex: Jm[ele - 1][hMatrix[index] - 1] - 1,
       duration: duration,
       St: _res._St,
       Et: _res._Et,
     };
   });
   console.log("Ojh", Ojh, "\nMijh", Mijh);
-
-  ganttData=getGanttData(Ojh)
-  let ganttOption=getGanttOption(ganttData)
-  myChart.setOption(ganttOption);
 }
+// ganttData = getGanttData(Ojh);
+// let ganttOption = getGanttOption(ganttData);
+// myChart.setOption(ganttOption);
 function getGanttData(obj) {
-  let _data=[]
+  let _data = [];
   for (const key in obj) {
     _data.push({
       name: key,
-      value: [obj[key]['machineIndex'],obj[key]['St'] , obj[key]['Et'], obj[key]['duration']],
+      value: [
+        obj[key]["machineIndex"],
+        obj[key]["St"],
+        obj[key]["Et"],
+        obj[key]["duration"],
+      ],
       itemStyle: {
-        color: obj[key]['color']
+        color: obj[key]["color"],
       },
     });
   }
-  return _data
+  return _data;
 }
 
 function getGanttOption(data) {
@@ -328,7 +328,7 @@ function getGanttOption(data) {
         data: data,
       },
     ],
-  }; 
+  };
 }
 function getMachinePartChromosomes(xJobs, xPopulation, xMachines) {
   let _res = [];
@@ -565,23 +565,39 @@ function getProcessNum(list) {
   }, 0);
 }
 // 交叉操作
-// function cross(to) {
-//   let r = getRandomNumber(1, to - 1);
-//   // 生成r个互不相等的随机数
-//   let i = 0;
-//   let rArr = [];
-//   do {
-//     let _r = getRandomNumber(1, to - 1);
-//     if (!rArr.includes(_r)) {
-//       rArr.push(_r);
-//       i++;
-//     }
-//   } while (i < r);
-// }
+machineCross(To, MachinePartChromosomes[0], MachinePartChromosomes[1]);
+function machineCross(to, mp1, mp2) {
+  let r = getRandomNumber(1, to - 1);
+  // 生成r个互不相等的随机数
+  let i = 0;
+  let rArr = [];
+  do {
+    let _r = getRandomNumber(1, to - 1);
+    if (!rArr.includes(_r)) {
+      rArr.push(_r);
+      i++;
+    }
+  } while (i < r);
+  rArr.sort((a, b) => a - b);
+  console.log("mp1", mp1, "\n mp2", mp2);
+  console.log("rArr", rArr);
+  let mc1 = Array(to).fill(null);
+  let mc2 = Array(to).fill(null);
+  for (let i = 0; i < to; i++) {
+    if (rArr.includes(i + 1)) {
+      mc1[i] = mp1[i];
+      mc2[i] = mp2[i];
+    } else {
+      mc1[i] = mp2[i];
+      mc2[i] = mp1[i];
+    }
+  }
+  console.log("mc1", mc1, "\n mc2", mc2);
+}
 // 生成一个区间[a,b]之间的随机数，a,b 可以取到
-// function getRandomNumber(a, b) {
-//   return Math.floor(Math.random() * (b - a + 1) + a);
-// }
+function getRandomNumber(a, b) {
+  return Math.floor(Math.random() * (b - a + 1) + a);
+}
 </script>
 
 <style scoped>
