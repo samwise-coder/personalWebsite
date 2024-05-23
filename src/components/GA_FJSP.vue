@@ -36,7 +36,7 @@ tableConfig.value = getTableConfig(machineNum);
 tableData.value = originalDataVisualization(Mk01);
 const jobs = getJobs(Mk01); // 工件数组
 const To = getProcessNum(jobs); // 工序数
-const Jobset = getJobset(To);
+const Jobset = getJobset(jobs.length);
 console.log("To", To, "\njobs", jobs);
 let myChart = null;
 let ganttData = [];
@@ -565,7 +565,7 @@ function getProcessNum(list) {
   }, 0);
 }
 // 机器部分交叉操作
-machineCross(To, MachinePartChromosomes[0], MachinePartChromosomes[1]);
+// machineCross(To, MachinePartChromosomes[0], MachinePartChromosomes[1]);
 function machineCross(to, mp1, mp2) {
   let r = getRandomNumber(1, to - 1);
   // 生成r个互不相等的随机数
@@ -595,8 +595,59 @@ function machineCross(to, mp1, mp2) {
   console.log("mc1", mc1, "\n mc2", mc2);
 }
 // 工序部分交叉操作
-processCross(Jobset, ProcessPartChromosomes[0], ProcessPartChromosomes[1]);
-function processCross(jobset, pp1, pp2) {}
+processCross(To, Jobset, ProcessPartChromosomes[0], ProcessPartChromosomes[1]);
+
+function processCross(to, jobset, pp1, pp2) {
+  const _jobset = shuffleArray(jobset);
+  let _random = getRandomNumber(1, jobset.length - 2);
+  let jobset1 = _jobset.slice(0, _random);
+  let jobset2 = _jobset.slice(_random);
+  let pc1 = Array(to).fill(null);
+  let pc2 = Array(to).fill(null);
+  let _remained1 = [];
+  let _remained2 = [];
+  for (let i = 0; i < to; i++) {
+    if (jobset1.includes(pp1[i])) {
+      pc1[i] = pp1[i];
+    }
+    if (!jobset1.includes(pp2[i])) {
+      _remained1.push(pp2[i]);
+    }
+    if (jobset2.includes(pp2[i])) {
+      pc2[i] = pp2[i];
+    }
+    if (!jobset2.includes(pp1[i])) {
+      _remained2.push(pp1[i]);
+    }
+  }
+
+  for (let i = 0; i < to; i++) {
+    if (pc1[i] === null) {
+      pc1[i] = _remained1.shift();
+    }
+    if (pc2[i] === null) {
+      pc2[i] = _remained2.shift();
+    }
+  }
+  console.log(
+    "jobset1",
+    jobset1,
+    "\npc1",
+    pc1,
+    "\npp1",
+    pp1,
+    "\n_remained1",
+    _remained1,
+    "\njobset2",
+    jobset2,
+    "\npc2",
+    pc2,
+    "\npp2",
+    pp2,
+    "\n_remained2",
+    _remained2
+  );
+}
 function getJobset(to) {
   let _set = [];
   for (let i = 0; i < to; i++) {
