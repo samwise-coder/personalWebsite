@@ -35,6 +35,7 @@ const machines = getMachines(machineNum); // 所有机器
 tableConfig.value = getTableConfig(machineNum);
 tableData.value = originalDataVisualization(Mk01);
 const jobs = getJobs(Mk01); // 工件数组
+const jobsFlat =jobs.flat()
 const To = getProcessNum(jobs); // 工序数
 const Jobset = getJobset(jobs.length);
 console.log("To", To, "\njobs", jobs);
@@ -348,7 +349,7 @@ function getProcessPartChromosomes(xJobs, xPopulation) {
 function machineGlobalSelection(xJobs, xMachines) {
   let _tempArr = [];
   let xMachineTimeList = Array(xMachines.length).fill(0);
-  const selectionQueue = generateUniqueRandomNumbers(0, 9);
+  const selectionQueue = generateUniqueRandomNumbers(0, xJobs.length-1);
   selectionQueue.forEach((ele) => {
     const gsiItem = selectSingleProcess(
       xJobs[ele],
@@ -567,20 +568,9 @@ function getProcessNum(list) {
 // 机器部分交叉操作
 // machineCross(To, MachinePartChromosomes[0], MachinePartChromosomes[1]);
 function machineCross(to, mp1, mp2) {
-  let r = getRandomNumber(1, to - 1);
   // 生成r个互不相等的随机数
-  let i = 0;
-  let rArr = [];
-  do {
-    let _r = getRandomNumber(1, to - 1);
-    if (!rArr.includes(_r)) {
-      rArr.push(_r);
-      i++;
-    }
-  } while (i < r);
-  rArr.sort((a, b) => a - b);
+  let rArr = getRsNums(1,to-1);
   console.log("mp1", mp1, "\n mp2", mp2);
-  console.log("rArr", rArr);
   let mc1 = Array(to).fill(null);
   let mc2 = Array(to).fill(null);
   for (let i = 0; i < to; i++) {
@@ -595,58 +585,69 @@ function machineCross(to, mp1, mp2) {
   console.log("mc1", mc1, "\n mc2", mc2);
 }
 // 工序部分交叉操作
-processCross(To, Jobset, ProcessPartChromosomes[0], ProcessPartChromosomes[1]);
+// processCross(To,Jobset, ProcessPartChromosomes[0], ProcessPartChromosomes[1]);
 
-function processCross(to, jobset, pp1, pp2) {
-  const _jobset = shuffleArray(jobset);
-  let _random = getRandomNumber(1, jobset.length - 2);
-  let jobset1 = _jobset.slice(0, _random);
-  let jobset2 = _jobset.slice(_random);
+function processCross(to,jobset, pp1, pp2) {
+  const _jobset= shuffleArray(jobset)
+  let _random=getRandomNumber(1,jobset.length-2)
+  let jobset1=_jobset.slice(0,_random)
+  let jobset2=_jobset.slice(_random)
   let pc1 = Array(to).fill(null);
   let pc2 = Array(to).fill(null);
-  let _remained1 = [];
-  let _remained2 = [];
+  let _remained1=[]
+  let _remained2=[]
   for (let i = 0; i < to; i++) {
     if (jobset1.includes(pp1[i])) {
       pc1[i] = pp1[i];
     }
-    if (!jobset1.includes(pp2[i])) {
-      _remained1.push(pp2[i]);
+    if(!jobset1.includes(pp2[i])){
+      _remained1.push(pp2[i])
     }
-    if (jobset2.includes(pp2[i])) {
+    if(jobset2.includes(pp2[i])){
       pc2[i] = pp2[i];
     }
-    if (!jobset2.includes(pp1[i])) {
-      _remained2.push(pp1[i]);
+    if(!jobset2.includes(pp1[i])){
+      _remained2.push(pp1[i])
     }
   }
 
   for (let i = 0; i < to; i++) {
-    if (pc1[i] === null) {
-      pc1[i] = _remained1.shift();
+    if(pc1[i]===null){
+      pc1[i]=_remained1.shift()
     }
-    if (pc2[i] === null) {
-      pc2[i] = _remained2.shift();
+    if(pc2[i]===null){
+      pc2[i]=_remained2.shift()
     }
   }
-  console.log(
-    "jobset1",
-    jobset1,
-    "\npc1",
-    pc1,
-    "\npp1",
-    pp1,
-    "\n_remained1",
-    _remained1,
-    "\njobset2",
-    jobset2,
-    "\npc2",
-    pc2,
-    "\npp2",
-    pp2,
-    "\n_remained2",
-    _remained2
-  );
+  console.log('jobset1',jobset1,'\npc1',pc1,'\npp1',pp1,'\n_remained1',_remained1,'\njobset2',jobset2,'\npc2',pc2,'\npp2',pp2,'\n_remained2',_remained2)
+}
+// machineMutation(To,MachinePartChromosomes[0],jobsFlat)
+// 机器部分变异
+function machineMutation(to,mp,xJobsFlat) {
+  const rArr = getRsNums(0,to-1)
+  const _res=_.cloneDeep(mp)
+  rArr.forEach(ele=>{
+    const _tempMTM = xJobsFlat[ele].machineTimeMatrix
+    // 找出加工时间最短的机器
+    let _minIndex=0
+    let _minVal=_tempMTM[0][1]
+    _tempMTM.forEach((eleSon,sondex)=>{
+      if(sondex>0){
+        if(_minVal>eleSon[1]){
+          _minVal=eleSon[1]
+          _minIndex=sondex
+        }
+      }
+    })
+    _res[ele]=_minIndex+1
+  })
+  // console.log('jobsFlat',jobsFlat,'\n rArr',rArr,'\n mp',mp,'\n _res',_res)
+  return _res
+}
+// 工序部分变异
+function processMutation(params) {
+  //
+  
 }
 function getJobset(to) {
   let _set = [];
@@ -654,6 +655,22 @@ function getJobset(to) {
     _set.push(i + 1);
   }
   return _set;
+}
+// 随机生成 R 个在取件（a,b）之间互不相等的数组
+function getRsNums(a,b) {
+  let r = getRandomNumber(a, b);
+  // 生成r个互不相等的随机数
+  let i = 0;
+  let rArr = [];
+  do {
+    let _r = getRandomNumber(a, b);
+    if (!rArr.includes(_r)) {
+      rArr.push(_r);
+      i++;
+    }
+  } while (i < r);
+  rArr.sort((a, b) => a - b);
+  return rArr
 }
 // 生成一个区间[a,b]之间的随机数，a,b 可以取到
 function getRandomNumber(a, b) {
