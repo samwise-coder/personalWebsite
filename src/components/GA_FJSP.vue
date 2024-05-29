@@ -662,12 +662,23 @@ function machineMutation(to, mp, xJobsFlat) {
   return _res;
 }
 // 工序部分变异(基于领域搜索变异)
-function processMutation(params) {
-  //
+// processMutation(To, MachinePartChromosomes[0]);
+function processMutation(to, ppc) {
+  // r个不同基因的索引
+  const rArrIndex = getRsNums(0, to - 1);
+  let geneArr = [];
+  rArrIndex.forEach((ele) => {
+    geneArr.push(ppc[ele]);
+  });
+  console.log("rArrIndex", rArrIndex, "\ngeneArr", geneArr, "\n ppc", ppc);
+  const ordering = permute(geneArr);
+  console.log("ordering", ordering);
+
+  // const uniQueOrdering = twoDimensionalUnique(ordering);
+  // console.log("ordering", ordering, "\n uniQueOrdering", uniQueOrdering);
 }
 
 // 二维数组去重
-
 function twoDimensionalUnique(towDimenArr) {
   let uniqueStringArr = [];
   let uniqueArr = [];
@@ -679,6 +690,8 @@ function twoDimensionalUnique(towDimenArr) {
   });
   return uniqueArr;
 }
+const _res = permute([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+console.log("result", _res);
 
 // 获取数组的全部排列组合
 function permute(arr, n = arr.length) {
