@@ -662,20 +662,32 @@ function machineMutation(to, mp, xJobsFlat) {
   return _res;
 }
 // 工序部分变异(基于领域搜索变异)
-// processMutation(To, MachinePartChromosomes[0]);
+processMutation(To, MachinePartChromosomes[0]);
+
 function processMutation(to, ppc) {
   // r个不同基因的索引
-  const rArrIndex = getRsNums(0, to - 1);
+  const rArrIndex = getRsNums(0, to - 1, 4);
   let geneArr = [];
   rArrIndex.forEach((ele) => {
     geneArr.push(ppc[ele]);
   });
   console.log("rArrIndex", rArrIndex, "\ngeneArr", geneArr, "\n ppc", ppc);
   const ordering = permute(geneArr);
-  console.log("ordering", ordering);
+  // console.log("ordering", ordering);
 
-  // const uniQueOrdering = twoDimensionalUnique(ordering);
-  // console.log("ordering", ordering, "\n uniQueOrdering", uniQueOrdering);
+  const uniQueOrdering = twoDimensionalUnique(ordering);
+  console.log("ordering", ordering, "\n uniQueOrdering", uniQueOrdering);
+  // 将组合映射回去
+  let candidateMutations = [];
+  uniQueOrdering.forEach((ele) => {
+    let _temp = _.cloneDeep(ppc);
+    rArrIndex.forEach((eleSon, sondex) => {
+      _temp[eleSon] = ele[sondex];
+    });
+    candidateMutations.push(_temp);
+  });
+  console.log("candidateMutations", candidateMutations);
+  // 求解适应度值
 }
 
 // 二维数组去重
@@ -690,9 +702,6 @@ function twoDimensionalUnique(towDimenArr) {
   });
   return uniqueArr;
 }
-const _res = permute([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-console.log("result", _res);
-
 // 获取数组的全部排列组合
 function permute(arr, n = arr.length) {
   if (n === 1) {
@@ -716,9 +725,9 @@ function getJobset(to) {
   }
   return _set;
 }
-// 随机生成 R 个在取件（a,b）之间互不相等的数组
-function getRsNums(a, b) {
-  let r = getRandomNumber(a, b);
+// 随机生成 R 个在取件（a,b）之间互不相等的数组,可选：c个数,默认随机
+function getRsNums(a, b, c = null) {
+  let r = c || getRandomNumber(a, b);
   // 生成r个互不相等的随机数
   let i = 0;
   let rArr = [];
