@@ -56,7 +56,7 @@ let ProcessPartChromosomes = getProcessPartChromosomes(
 onMounted(() => {
   let chartDom = document.getElementById("gantt");
   myChart = echarts.init(chartDom);
-  // fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
+  fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
 });
 
 var data = [];
@@ -253,10 +253,15 @@ function fitness(mpc, ppc, xJobs) {
     };
   });
   console.log("Ojh", Ojh, "\nMijh", Mijh);
+  ganttData = getGanttData(Ojh);
+  let ganttOption = getGanttOption(ganttData);
+  myChart.setOption(ganttOption);
+  // 最大完工时间
+  getMaxEndTime(Mijh);
 }
-// ganttData = getGanttData(Ojh);
-// let ganttOption = getGanttOption(ganttData);
-// myChart.setOption(ganttOption);
+function getMaxEndTime(mijh) {
+  mijh.forEach((ele) => {});
+}
 function getGanttData(obj) {
   let _data = [];
   for (const key in obj) {
