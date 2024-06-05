@@ -56,7 +56,7 @@ let ProcessPartChromosomes = getProcessPartChromosomes(
 onMounted(() => {
   let chartDom = document.getElementById("gantt");
   myChart = echarts.init(chartDom);
-  fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
+  // fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
 });
 
 var data = [];
@@ -643,11 +643,21 @@ function processCross(to, jobset, pp1, pp2) {
     _remained2
   );
 }
+
+function mutation(to, mpc, xJobsFlat, ppc, xJobs) {
+  let _machineGene = machineMutation(to, mpc, xJobsFlat);
+  let _processGeneCandidate = processMutation(to, ppc);
+  let _tempFitness = []; //
+  _processGeneCandidate.forEach((ele) => {
+    _tempFitness.push(fitness(_machineGene, ele, xJobs));
+  });
+  console.log("_tempFitness", _tempFitness);
+}
 // machineMutation(To,MachinePartChromosomes[0],jobsFlat)
 // 机器部分变异
-function machineMutation(to, mp, xJobsFlat) {
+function machineMutation(to, mpc, xJobsFlat) {
   const rArr = getRsNums(0, to - 1);
-  const _res = _.cloneDeep(mp);
+  const _res = _.cloneDeep(mpc);
   rArr.forEach((ele) => {
     const _tempMTM = xJobsFlat[ele].machineTimeMatrix;
     // 找出加工时间最短的机器
@@ -663,12 +673,10 @@ function machineMutation(to, mp, xJobsFlat) {
     });
     _res[ele] = _minIndex + 1;
   });
-  // console.log('jobsFlat',jobsFlat,'\n rArr',rArr,'\n mp',mp,'\n _res',_res)
   return _res;
 }
 // 工序部分变异(基于领域搜索变异)
-processMutation(To, MachinePartChromosomes[0]);
-
+// processMutation(To, ProcessPartChromosomes[0]);
 function processMutation(to, ppc) {
   // r个不同基因的索引
   const rArrIndex = getRsNums(0, to - 1, 4);
@@ -693,6 +701,7 @@ function processMutation(to, ppc) {
   });
   console.log("candidateMutations", candidateMutations);
   // 求解适应度值
+  return candidateMutations;
 }
 
 // 二维数组去重
