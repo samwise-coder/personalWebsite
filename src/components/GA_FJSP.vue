@@ -29,7 +29,9 @@ import _ from "lodash";
 const tableConfig = ref([]);
 const machineNum = Mk01[0][1];
 const tableData = ref([]);
-const population = 2; //种群数量
+const population = 100; //种群数量
+const Pc = 0.8; //交叉概率（0.6~0.9）
+const Pm = 0.03; // 变异概率 （0.005~0.06）
 
 const machines = getMachines(machineNum); // 所有机器
 tableConfig.value = getTableConfig(machineNum);
@@ -119,6 +121,41 @@ function renderItem(params, api) {
       },
     }
   );
+}
+// 改进的遗传算法
+// main(MachinePartChromosomes, ProcessPartChromosomes, jobs,Pc,Pm);
+function main(mpc, ppc, xJob, to, xPc, xPm) {
+  let mpcPool = mpc;
+  let ppcPool = ppc;
+  // 迭代次数100
+  for (let i = 0; i < 1; i++) {
+    // 评价每一个个体
+    let _individualFitness = [];
+
+    mpcPool.forEach((ele, index) => {
+      _individualFitness.push(fitness(ele, ppcPool[index], xJobs));
+    });
+    // 产生下一代种群
+    for (let j = 0; j < 100; j++) {
+      // 锦标赛选择 每次选择4个个体进行比较;同时选择2个候选个体
+      let _tempMpc = null;
+      let _tempPpc = null;
+      const rArrIndex = getRsNums(0, to - 1, 4);
+      for (let k = 1; k < rArrIndex.length; k++) {
+        let _maxDex = rArrIndex[0];
+        if (_individualFitness[rArrIndex[k]] > _individualFitness[_maxDex]) {
+          _maxDex = rArrIndex[k];
+        }
+        _tempMpc = mpcPool[_maxDex];
+        _tempPpc = ppcPool[_maxDex];
+      }
+      // 判断是否交叉
+      const _P1 = Math.random();
+      if (_P1 < xPc) {
+        // machineCross(To, MachinePartChromosomes[0], MachinePartChromosomes[1]);
+      }
+    }
+  }
 }
 // 适应度函数 目标：最大完工时间最小化，f=min(max(Cj))
 // 计算每个个体的最大完工时间
@@ -649,14 +686,17 @@ function processCross(to, jobset, pp1, pp2) {
     _remained2
   );
 }
-
-mutation(
-  To,
-  MachinePartChromosomes[0],
-  jobsFlat,
-  ProcessPartChromosomes[0],
-  jobs
-);
+function championshipsSelection(params) {
+  // 每次选择的个体
+  const _selectNum = 4;
+}
+// mutation(
+//   To,
+//   MachinePartChromosomes[0],
+//   jobsFlat,
+//   ProcessPartChromosomes[0],
+//   jobs
+// );
 
 function mutation(to, mpc, xJobsFlat, ppc, xJobs) {
   let _machineGene = machineMutation(to, mpc, xJobsFlat);
