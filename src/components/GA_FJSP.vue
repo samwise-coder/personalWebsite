@@ -126,7 +126,7 @@ function fitness(mpc, ppc, xJobs) {
   // 机器选择部分解码
   let Jm = []; //机器顺序矩阵
   let T = []; //时间顺序矩阵
-  console.log("mpc", mpc, "\nppc", ppc);
+  // console.log("mpc", mpc, "\nppc", ppc);
   let i = 0;
   xJobs.forEach((ele) => {
     let _machRow = [];
@@ -139,7 +139,7 @@ function fitness(mpc, ppc, xJobs) {
     Jm.push(_machRow);
     T.push(_timeRow);
   });
-  console.log("Jm", Jm, "\nT", T);
+  // console.log("Jm", Jm, "\nT", T);
 
   // 工序排序部分解码
   // 转换成 O(jh) 第j个工件的第h道工序
@@ -150,7 +150,7 @@ function fitness(mpc, ppc, xJobs) {
     _hasCal.push(ele);
     hMatrix.push(_hasCal.filter((gene) => gene === ele).length);
   });
-  console.log("hMatrix", hMatrix);
+  // console.log("hMatrix", hMatrix);
   //
   let Ojh = {}; // 工序层面 工件j的第h道工序
   let Mijh = {}; // 机器层面  工件j的第h道工序在机器i上加工
@@ -253,14 +253,20 @@ function fitness(mpc, ppc, xJobs) {
     };
   });
   console.log("Ojh", Ojh, "\nMijh", Mijh);
-  ganttData = getGanttData(Ojh);
-  let ganttOption = getGanttOption(ganttData);
-  myChart.setOption(ganttOption);
+  // ganttData = getGanttData(Ojh);
+  // let ganttOption = getGanttOption(ganttData);
+  // myChart.setOption(ganttOption);
   // 最大完工时间
-  getMaxEndTime(Mijh);
+  return getMaxEndTime(Mijh);
 }
 function getMaxEndTime(mijh) {
-  mijh.forEach((ele) => {});
+  let _max = 0;
+  for (const key in mijh) {
+    if (mijh[key][mijh[key].length - 1].Et > _max) {
+      _max = mijh[key][mijh[key].length - 1].Et;
+    }
+  }
+  return _max;
 }
 function getGanttData(obj) {
   let _data = [];
@@ -644,6 +650,14 @@ function processCross(to, jobset, pp1, pp2) {
   );
 }
 
+mutation(
+  To,
+  MachinePartChromosomes[0],
+  jobsFlat,
+  ProcessPartChromosomes[0],
+  jobs
+);
+
 function mutation(to, mpc, xJobsFlat, ppc, xJobs) {
   let _machineGene = machineMutation(to, mpc, xJobsFlat);
   let _processGeneCandidate = processMutation(to, ppc);
@@ -651,7 +665,11 @@ function mutation(to, mpc, xJobsFlat, ppc, xJobs) {
   _processGeneCandidate.forEach((ele) => {
     _tempFitness.push(fitness(_machineGene, ele, xJobs));
   });
-  console.log("_tempFitness", _tempFitness);
+  // console.log("_tempFitness", _tempFitness);
+  let _maxVal = Math.max(..._tempFitness);
+  let _maxIndex = _tempFitness.findIndex((ele) => ele === _maxVal);
+  // console.log("_maxVal", _maxVal, "\n _maxIndex", _maxIndex);
+  return { mpc: _machineGene, ppc: _processGeneCandidate[_maxIndex] };
 }
 // machineMutation(To,MachinePartChromosomes[0],jobsFlat)
 // 机器部分变异
