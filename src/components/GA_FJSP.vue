@@ -135,7 +135,7 @@ function main(mpc, ppc, xJob, to, xPc, xPm) {
     mpcPool.forEach((ele, index) => {
       _individualFitness.push(fitness(ele, ppcPool[index], xJobs));
     });
-    // 产生下一代种群
+    // 产生下一代种群 种群个数为100
     for (let j = 0; j < 100; j++) {
       // 锦标赛选择 每次选择4个个体进行比较;同时选择2个候选个体
       let _tempMpc = null;
