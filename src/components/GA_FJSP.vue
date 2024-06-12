@@ -123,8 +123,17 @@ function renderItem(params, api) {
   );
 }
 // 改进的遗传算法
-// main(MachinePartChromosomes, ProcessPartChromosomes, jobs,Pc,Pm);
-function main(mpc, ppc, xJob, to, xPc, xPm) {
+main(
+  MachinePartChromosomes,
+  ProcessPartChromosomes,
+  jobs,
+  To,
+  Pc,
+  Pm,
+  Jobset,
+  jobsFlat
+);
+function main(mpc, ppc, xJobs, to, xPc, xPm, xJobset, xJobsFlat) {
   let mpcPool = mpc;
   let ppcPool = ppc;
   // 迭代次数100
@@ -135,24 +144,38 @@ function main(mpc, ppc, xJob, to, xPc, xPm) {
     mpcPool.forEach((ele, index) => {
       _individualFitness.push(fitness(ele, ppcPool[index], xJobs));
     });
+    console.log("迭代", i);
     // 产生下一代种群 种群个数为100
-    for (let j = 0; j < 100; j++) {
+    for (let j = 0; j < 2; j++) {
       // 锦标赛选择 每次选择4个个体进行比较;同时选择2个候选个体
-      let _tempMpc = null;
-      let _tempPpc = null;
-      const rArrIndex = getRsNums(0, to - 1, 4);
-      for (let k = 1; k < rArrIndex.length; k++) {
-        let _maxDex = rArrIndex[0];
-        if (_individualFitness[rArrIndex[k]] > _individualFitness[_maxDex]) {
-          _maxDex = rArrIndex[k];
+      let _tempMpcArr = [];
+      let _tempPpcArr = [];
+      console.log("j", j);
+      for (let m = 0; m < 2; m++) {
+        const rArrIndex = getRsNums(0, to - 1, 4);
+        for (let k = 1; k < rArrIndex.length; k++) {
+          let _maxDex = rArrIndex[0];
+          if (_individualFitness[rArrIndex[k]] > _individualFitness[_maxDex]) {
+            _maxDex = rArrIndex[k];
+          }
+          _tempMpcArr.push(mpcPool[_maxDex]);
+          _tempPpcArr.push(ppcPool[_maxDex]);
         }
-        _tempMpc = mpcPool[_maxDex];
-        _tempPpc = ppcPool[_maxDex];
       }
+      console.log("_tempMpcArr", _tempMpcArr, "\n _tempPpcArr", _tempPpcArr);
+
       // 判断是否交叉
       const _P1 = Math.random();
+      console.log("交叉概率：", _P1, xPc);
+      const [mc1, mc2] = [null, null];
+      const [pc1, pc2] = [null, null];
       if (_P1 < xPc) {
-        // machineCross(To, MachinePartChromosomes[0], MachinePartChromosomes[1]);
+        [mc1, mc2] = machineCross(to, _tempMpcArr[0], _tempMpcArr[1]);
+        [pc1, pc2] = processCross(to, xJobset, _tempPpcArr[0], _tempPpcArr[1]);
+      }
+      const _P2 = Math.random();
+      if (_P2 < xPm) {
+        const { mpc, ppc } = mutation(to, mc1[0], xJobsFlat, pc1[0], xJobs);
       }
     }
   }
@@ -289,7 +312,7 @@ function fitness(mpc, ppc, xJobs) {
       Et: _res._Et,
     };
   });
-  console.log("Ojh", Ojh, "\nMijh", Mijh);
+  // console.log("Ojh", Ojh, "\nMijh", Mijh);
   // ganttData = getGanttData(Ojh);
   // let ganttOption = getGanttOption(ganttData);
   // myChart.setOption(ganttOption);
@@ -618,7 +641,7 @@ function getProcessNum(list) {
 function machineCross(to, mp1, mp2) {
   // 生成r个互不相等的随机数
   let rArr = getRsNums(1, to - 1);
-  console.log("mp1", mp1, "\n mp2", mp2);
+  // console.log("mp1", mp1, "\n mp2", mp2);
   let mc1 = Array(to).fill(null);
   let mc2 = Array(to).fill(null);
   for (let i = 0; i < to; i++) {
@@ -630,7 +653,8 @@ function machineCross(to, mp1, mp2) {
       mc2[i] = mp1[i];
     }
   }
-  console.log("mc1", mc1, "\n mc2", mc2);
+  // console.log("mc1", mc1, "\n mc2", mc2);
+  return [mc1, mc2];
 }
 // 工序部分交叉操作
 // processCross(To,Jobset, ProcessPartChromosomes[0], ProcessPartChromosomes[1]);
@@ -667,24 +691,8 @@ function processCross(to, jobset, pp1, pp2) {
       pc2[i] = _remained2.shift();
     }
   }
-  console.log(
-    "jobset1",
-    jobset1,
-    "\npc1",
-    pc1,
-    "\npp1",
-    pp1,
-    "\n_remained1",
-    _remained1,
-    "\njobset2",
-    jobset2,
-    "\npc2",
-    pc2,
-    "\npp2",
-    pp2,
-    "\n_remained2",
-    _remained2
-  );
+  // console.log("jobset1",jobset1,"\npc1",pc1,"\npp1",pp1,"\n_remained1",_remained1,"\njobset2",jobset2,"\npc2",pc2,"\npp2",pp2,"\n_remained2",_remained2);
+  return [pc1, pc2];
 }
 function championshipsSelection(params) {
   // 每次选择的个体
