@@ -174,6 +174,7 @@ function main(mpc, ppc, xJobs, to, xPc, xPm, xJobset, xJobsFlat) {
         [pc1, pc2] = processCross(to, xJobset, _tempPpcArr[0], _tempPpcArr[1]);
       }
       const _P2 = Math.random();
+      // 判断是否变异
       if (_P2 < xPm) {
         const { mpc, ppc } = mutation(to, mc1[0], xJobsFlat, pc1[0], xJobs);
       }
