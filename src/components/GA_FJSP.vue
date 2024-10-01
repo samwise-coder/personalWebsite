@@ -31,7 +31,7 @@ const machineNum = Mk01[0][1];
 const tableData = ref([]);
 const population = 100; //种群数量
 const Pc = 0.8; //交叉概率（0.6~0.9）
-const Pm = 0.03; // 变异概率 （0.005~0.06）
+const Pm = 0.05; // 变异概率 （0.005~0.06）
 
 const machines = getMachines(machineNum); // 所有机器
 tableConfig.value = getTableConfig(machineNum);
@@ -58,6 +58,18 @@ let ProcessPartChromosomes = getProcessPartChromosomes(
 onMounted(() => {
   let chartDom = document.getElementById("gantt");
   myChart = echarts.init(chartDom);
+  // 改进的遗传算法
+  main(
+    MachinePartChromosomes,
+    ProcessPartChromosomes,
+    jobs,
+    To,
+    Pc,
+    Pm,
+    Jobset,
+    jobsFlat,
+    population
+  );
   // fitness(MachinePartChromosomes[0], ProcessPartChromosomes[0], jobs);
 });
 
@@ -122,22 +134,11 @@ function renderItem(params, api) {
     }
   );
 }
-// 改进的遗传算法
-main(
-  MachinePartChromosomes,
-  ProcessPartChromosomes,
-  jobs,
-  To,
-  Pc,
-  Pm,
-  Jobset,
-  jobsFlat
-);
-function main(mpc, ppc, xJobs, to, xPc, xPm, xJobset, xJobsFlat) {
+function main(mpc, ppc, xJobs, to, xPc, xPm, xJobset, xJobsFlat, xPopulation) {
   let mpcPool = mpc;
   let ppcPool = ppc;
   // 迭代次数100
-  for (let i = 0; i < 1; i++) {
+  for (let i = 0; i < 50; i++) {
     // 评价每一个个体
     let _individualFitness = [];
 
@@ -145,41 +146,79 @@ function main(mpc, ppc, xJobs, to, xPc, xPm, xJobset, xJobsFlat) {
       _individualFitness.push(fitness(ele, ppcPool[index], xJobs));
     });
     console.log("迭代", i);
-    // 产生下一代种群 种群个数为100
-    for (let j = 0; j < 2; j++) {
-      // 锦标赛选择 每次选择4个个体进行比较;同时选择2个候选个体
-      let _tempMpcArr = [];
-      let _tempPpcArr = [];
-      console.log("j", j);
-      for (let m = 0; m < 2; m++) {
-        const rArrIndex = getRsNums(0, to - 1, 4);
-        for (let k = 1; k < rArrIndex.length; k++) {
-          let _maxDex = rArrIndex[0];
-          if (_individualFitness[rArrIndex[k]] > _individualFitness[_maxDex]) {
-            _maxDex = rArrIndex[k];
-          }
-          _tempMpcArr.push(mpcPool[_maxDex]);
-          _tempPpcArr.push(ppcPool[_maxDex]);
+    // '锦标赛'选择出交叉池，交叉池数量等于种群数量
+    let _mpcPool = [];
+    let _ppcPool = [];
+    for (let p = 0; p < xPopulation; p++) {
+      const rArrIndex = getRsNums(0, to - 1, 4);
+      let _minDex = rArrIndex[0];
+      for (let k = 1; k < rArrIndex.length; k++) {
+        if (_individualFitness[rArrIndex[k]] < _individualFitness[_minDex]) {
+          _minDex = rArrIndex[k];
         }
       }
-      console.log("_tempMpcArr", _tempMpcArr, "\n _tempPpcArr", _tempPpcArr);
-
+      _mpcPool.push(mpcPool[_minDex]);
+      _ppcPool.push(ppcPool[_minDex]);
+    }
+    // 每次按顺序取两个交叉池中的元素进行下一步操作
+    let _nextMpcPool = [];
+    let _nextPpcPool = [];
+    for (let g = 0; g < xPopulation / 2; g++) {
+      let nextGenerationMpc1 = _mpcPool[2 * g];
+      let nextGenerationMpc2 = _mpcPool[2 * g + 1];
+      let nextGenerationPpc1 = _ppcPool[2 * g];
+      let nextGenerationPpc2 = _ppcPool[2 * g + 1];
       // 判断是否交叉
       const _P1 = Math.random();
-      console.log("交叉概率：", _P1, xPc);
-      const [mc1, mc2] = [null, null];
-      const [pc1, pc2] = [null, null];
       if (_P1 < xPc) {
-        [mc1, mc2] = machineCross(to, _tempMpcArr[0], _tempMpcArr[1]);
-        [pc1, pc2] = processCross(to, xJobset, _tempPpcArr[0], _tempPpcArr[1]);
+        [nextGenerationMpc1, nextGenerationMpc2] = machineCross(
+          to,
+          nextGenerationMpc1,
+          nextGenerationMpc2
+        );
+        [nextGenerationPpc1, nextGenerationPpc2] = processCross(
+          to,
+          xJobset,
+          nextGenerationPpc1,
+          nextGenerationPpc2
+        );
       }
-      const _P2 = Math.random();
       // 判断是否变异
+      const _P2 = Math.random();
       if (_P2 < xPm) {
-        const { mpc, ppc } = mutation(to, mc1[0], xJobsFlat, pc1[0], xJobs);
+        [nextGenerationMpc1, nextGenerationPpc1] = mutation(
+          to,
+          nextGenerationMpc1,
+          xJobsFlat,
+          nextGenerationPpc1,
+          xJobs
+        );
+        [nextGenerationMpc2, nextGenerationPpc2] = mutation(
+          to,
+          nextGenerationMpc2,
+          xJobsFlat,
+          nextGenerationPpc2,
+          xJobs
+        );
       }
+      _nextMpcPool.push(nextGenerationMpc1);
+      _nextMpcPool.push(nextGenerationMpc2);
+      _nextPpcPool.push(nextGenerationPpc1);
+      _nextPpcPool.push(nextGenerationPpc2);
     }
+    mpcPool = _nextMpcPool;
+    ppcPool = _nextPpcPool;
   }
+
+  let resFitness = [];
+  mpcPool.forEach((ele, index) => {
+    resFitness.push(fitness(ele, ppcPool[index], xJobs));
+  });
+  console.log("结果是：", Math.min(...resFitness), resFitness);
+  const minFitnessIndex = resFitness.indexOf(Math.min(...resFitness));
+  console.log("index:___>", minFitnessIndex);
+
+  visualizationRes(mpcPool[minFitnessIndex], ppcPool[minFitnessIndex], jobs);
 }
 // 适应度函数 目标：最大完工时间最小化，f=min(max(Cj))
 // 计算每个个体的最大完工时间
@@ -313,12 +352,143 @@ function fitness(mpc, ppc, xJobs) {
       Et: _res._Et,
     };
   });
-  // console.log("Ojh", Ojh, "\nMijh", Mijh);
-  // ganttData = getGanttData(Ojh);
-  // let ganttOption = getGanttOption(ganttData);
-  // myChart.setOption(ganttOption);
   // 最大完工时间
   return getMaxEndTime(Mijh);
+}
+function visualizationRes(mpc, ppc, xJobs) {
+  // 机器选择部分解码
+  let Jm = []; //机器顺序矩阵
+  let T = []; //时间顺序矩阵
+  // console.log("mpc", mpc, "\nppc", ppc);
+  let i = 0;
+  xJobs.forEach((ele) => {
+    let _machRow = [];
+    let _timeRow = [];
+    ele.forEach((eleSon) => {
+      _machRow.push(eleSon["machineTimeMatrix"][mpc[i] - 1][0]);
+      _timeRow.push(eleSon["machineTimeMatrix"][mpc[i] - 1][1]);
+      i++;
+    });
+    Jm.push(_machRow);
+    T.push(_timeRow);
+  });
+  // console.log("Jm", Jm, "\nT", T);
+
+  // 工序排序部分解码
+  // 转换成 O(jh) 第j个工件的第h道工序
+  // 首先求解出工序索引(h)矩阵：相当于每个工件的工序的索引，和工序排序染色体中的基因一一对应
+  let _hasCal = [];
+  let hMatrix = [];
+  ppc.forEach((ele) => {
+    _hasCal.push(ele);
+    hMatrix.push(_hasCal.filter((gene) => gene === ele).length);
+  });
+  // console.log("hMatrix", hMatrix);
+  //
+  let Ojh = {}; // 工序层面 工件j的第h道工序
+  let Mijh = {}; // 机器层面  工件j的第h道工序在机器i上加工
+  machines.forEach((ele) => {
+    Mijh[ele] = [];
+  });
+  ppc.forEach((ele, index) => {
+    const machineKey = `machine${Jm[ele - 1][hMatrix[index] - 1]}`;
+    const j = ele;
+    const h = hMatrix[index];
+    const duration = T[ele - 1][hMatrix[index] - 1];
+
+    let _res = { _St: 0, _Et: 0 };
+
+    if (Mijh[machineKey].length === 0) {
+      // 在机器mi是第一道加工工序
+      if (h === 1) {
+        // 是工件的第一道工序
+        _res._St = 0;
+        _res._Et = duration;
+      } else {
+        // 开始时间 则是上一道工序的结束时间
+        _res._St = Ojh[`O${j}${h - 1}`].Et;
+        _res._Et = _res._St + duration;
+        // console.log('_res',_res,'Ojh',`O${j}${h}` )
+      }
+      Mijh[machineKey].push({
+        process: `O${j}${h}`,
+        St: _res._St,
+        Et: _res._Et,
+      });
+    } else {
+      // 否则找到机器mi上所有间隔空闲时间段[TSi,TEi],注：当前工序前一道工序Oj(h-1)的结束时间后的才是有效区间
+      let idlePeriod = [];
+      // 从第一个工序前的空白开始
+      Mijh[machineKey].forEach((ele, index) => {
+        if (index === 0) {
+          idlePeriod.push([0, ele.St]);
+        } else {
+          idlePeriod.push([Mijh[machineKey][index - 1].Et, ele.St]);
+        }
+      });
+      // 找到Ojh最早开始加工时间 ta ,能满足工件加工工序的顺序约束：ta=max{Cj(h-1),TSi}
+      // 插入条件是:ta + Pijh <= TEi
+      // 如果不满足插入条件，则按照时间tb在机器Mi上加工，tb=max{Cj(h-1),LMi} LMi表示当前机器最后一道工序的结束时间
+      // 找出第一个可以插入的空闲区间
+      let firstSparePeriod = [];
+      let i = 0;
+      let ta = 0;
+      // console.log('Ojh',Ojh,'`\n O${j}${h-1}`',`O${j}${h-1}`)
+
+      while (i < idlePeriod.length) {
+        if (h === 1) {
+          ta = Math.max(0, idlePeriod[i][0]);
+        } else {
+          ta = Math.max(Ojh[`O${j}${h - 1}`].Et, idlePeriod[i][0]);
+        }
+        if (idlePeriod[i][1] - ta >= duration) {
+          firstSparePeriod.push({ fspdex: i, period: idlePeriod[i] });
+          break;
+        }
+        i++;
+      }
+      if (firstSparePeriod.length) {
+        Mijh[machineKey].splice(firstSparePeriod[0].fspdex, 0, {
+          process: `O${j}${h}`,
+          St: ta,
+          Et: ta + duration,
+        });
+        _res._St = ta;
+        _res._Et = ta + duration;
+      } else {
+        // 如果没有可插入空间则安排到当前机器最后一道工序的结束时间
+        const lastEle = Mijh[machineKey][Mijh[machineKey].length - 1];
+        let tb = 0;
+        if (h - 1 === 0) {
+          tb = Math.max(0, lastEle["Et"]);
+        } else {
+          tb = Math.max(Ojh[`O${j}${h - 1}`].Et, lastEle["Et"]);
+        }
+        Mijh[machineKey].push({
+          process: `O${j}${h}`,
+          St: tb,
+          Et: tb + duration,
+        });
+        _res._St = tb;
+        _res._Et = tb + duration;
+      }
+    }
+
+    Ojh[`O${j}${h}`] = {
+      job: j,
+      process: h,
+      color: `hsl(${j * 43} 75% 60%)`,
+      machine: machineKey,
+      machineIndex: Jm[ele - 1][hMatrix[index] - 1] - 1,
+      duration: duration,
+      St: _res._St,
+      Et: _res._Et,
+    };
+  });
+  console.log("Ojh", Ojh, "\nMijh", Mijh);
+  ganttData = getGanttData(Ojh);
+  let ganttOption = getGanttOption(ganttData);
+  myChart.setOption(ganttOption);
 }
 function getMaxEndTime(mijh) {
   let _max = 0;
@@ -715,10 +885,10 @@ function mutation(to, mpc, xJobsFlat, ppc, xJobs) {
     _tempFitness.push(fitness(_machineGene, ele, xJobs));
   });
   // console.log("_tempFitness", _tempFitness);
-  let _maxVal = Math.max(..._tempFitness);
-  let _maxIndex = _tempFitness.findIndex((ele) => ele === _maxVal);
-  // console.log("_maxVal", _maxVal, "\n _maxIndex", _maxIndex);
-  return { mpc: _machineGene, ppc: _processGeneCandidate[_maxIndex] };
+  let _minVal = Math.min(..._tempFitness);
+  let _maxIndex = _tempFitness.findIndex((ele) => ele === _minVal);
+  // console.log("_minVal", _minVal, "\n _maxIndex", _maxIndex);
+  return [_machineGene, _processGeneCandidate[_maxIndex]]; // [mpc,ppc]
 }
 // machineMutation(To,MachinePartChromosomes[0],jobsFlat)
 // 机器部分变异
@@ -751,12 +921,12 @@ function processMutation(to, ppc) {
   rArrIndex.forEach((ele) => {
     geneArr.push(ppc[ele]);
   });
-  console.log("rArrIndex", rArrIndex, "\ngeneArr", geneArr, "\n ppc", ppc);
+  // console.log("rArrIndex", rArrIndex, "\ngeneArr", geneArr, "\n ppc", ppc);
   const ordering = permute(geneArr);
   // console.log("ordering", ordering);
 
   const uniQueOrdering = twoDimensionalUnique(ordering);
-  console.log("ordering", ordering, "\n uniQueOrdering", uniQueOrdering);
+  // console.log("ordering", ordering, "\n uniQueOrdering", uniQueOrdering);
   // 将组合映射回去
   let candidateMutations = [];
   uniQueOrdering.forEach((ele) => {
@@ -766,7 +936,7 @@ function processMutation(to, ppc) {
     });
     candidateMutations.push(_temp);
   });
-  console.log("candidateMutations", candidateMutations);
+  // console.log("candidateMutations", candidateMutations);
   // 求解适应度值
   return candidateMutations;
 }
