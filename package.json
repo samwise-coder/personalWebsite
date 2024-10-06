@@ -12,7 +12,8 @@
     "echarts": "^5.5.0",
     "element-plus": "^2.7.2",
     "lodash": "^4.17.21",
-    "vue": "^3.0.0"
+    "vue": "^3.0.0",
+    "vue-router": "^4.4.5"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.13",
