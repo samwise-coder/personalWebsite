@@ -1,14 +1,10 @@
 <template>
-  <GA_FJSP />
+  <router-view></router-view>
 </template>
 
 <script>
-import GA_FJSP from "./components/GA_FJSP.vue";
 export default {
   name: "App",
-  components: {
-    GA_FJSP,
-  },
 };
 </script>
 
