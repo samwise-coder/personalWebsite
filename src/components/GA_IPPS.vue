@@ -1,5 +1,5 @@
 <template>
-  <div>ipps</div>
+  <div>ipps daka</div>
 </template>
 
 <script>
